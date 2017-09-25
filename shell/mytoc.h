@@ -29,4 +29,7 @@ int getPath(char**envp);
 int getArgc();
 
 char *append(char *path, char *cmd);
+
+char **tokenizeInput();
+
 #endif
