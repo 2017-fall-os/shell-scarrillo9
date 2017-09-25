@@ -1,16 +1,16 @@
-all: shell
+all: run
 
-shell: tokenizer.o shell.o
+run: tokenizer.o shell1.o
 	cc -o $@ $^
 	
-shell.o: shell.c mytoc.h
-	cc -c $(CFLAGS) test.c
+shell1.o: shell1.c mytoc.h
+	cc -c $(CFLAGS) shell1.c
 	
 tokenizer.o: tokenizer.c mytoc.h
-	cc -c $(CFLAGS) mytoc.c
+	cc -c $(CFLAGS) tokenizer.c
 	
 clean: 
-	rm -f *.o mytoc
+	rm -f *.o run
 
 demo: run
 	./run
