@@ -44,10 +44,10 @@ int main(int argc, char**argv, char **envp){
                     if(argc > 1){   //if input is longer than 1 word, contains own path
                         char *path = argv[1];
                         int retVal = execve(path, argv[0], envp);
-                        fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal);
+                        //fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal);
                     }
                     else{           //else will use path on envp
-                        printf("I am child (pid:%d)\n\n", (int)getpid()); ff;
+                        //printf("I am child (pid:%d)\n\n", (int)getpid()); ff;
                     
                         int pathNum = getPath(envp);                            //getting path address
                         char *path = startWord(envp[pathNum], '='); path++;     //path without PATH=
@@ -56,7 +56,7 @@ int main(int argc, char**argv, char **envp){
                         char **temp = pathVector; 
                         for(; temp; temp++){                                    //appends cmd to path
                             char *tempExe = append(*temp, argv[0]);             //and moves to execute
-                            printf("%s\n", tempExe); ff;
+                            //printf("%s\n", tempExe); ff;
                             int retVal = execve(tempExe, argv[0], envp);
                             fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal); //if not executed
                         }//end for
@@ -66,7 +66,7 @@ int main(int argc, char**argv, char **envp){
             
                 else{       //child is killed and then sent to parent
                     int wc = wait(NULL);
-                    printf("\nI am parent of %d (wc:%d) (pid:%d)\n", rc, wc, (int)getpid()); ff;
+                    //printf("\nI am parent of %d (wc:%d) (pid:%d)\n", rc, wc, (int)getpid()); ff;
                 }//end else
             //}//if command is found
             //else{       //didn't find command, prints error
