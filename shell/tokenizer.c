@@ -28,14 +28,18 @@ char **myToc(char *str, char delim){
 		//printf("currString: %s\n currWord: %s\n", currString, currWord); ff;
 		currString = currWord;
 	}//end for loop
-	printVector(vector);
+	//printVector(vector);
 	return vector;
 }//end myToc
 
+int getArgc(){
+    return numOfWords;
+}//end getArgc
+
 //frees vector
 void freeVector(char **vector){
-    char *temp = *vector;
-	for(; *vector; vector++){
+    char **temp = vector;
+	for(; vector; vector++){
 		free(*vector);
 	}//end for loop
 	//numOfWords = 0;
@@ -131,7 +135,7 @@ int countWords(char *str, char delim){
 		if(str[i] != delim && space == 1){
 			numOfWords++;
 		}//end if
-		if(str[i] == ' '){
+		if(str[i] == delim){
 			space = 1;
 		}//end if
 		else
@@ -143,4 +147,23 @@ int countWords(char *str, char delim){
 	return numOfWords;
 }//end countWords
 
-
+char *append(char *path, char *cmd){
+    int pathn = countLetters(path, ' ');
+    int cmdn = countLetters(cmd, ' ');
+    int length = pathn + cmdn;
+    
+    char *curr = (char *)malloc(length+2);
+	curr[length] = '\0';
+	
+	int i;
+	for(i = 0; i < pathn; i++){
+        curr[i] = path[i];
+	}//end for loop
+	curr[i] = '/'; i++;
+	int j;
+	for(j = 0; j < cmdn; j++){
+        curr[i] = cmd[j];
+        i++;
+    }//end for
+    return curr;
+}//end append
