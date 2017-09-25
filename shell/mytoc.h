@@ -2,7 +2,9 @@
 #define mytoc_included
 
 //demo method
-int main();
+int numOfWords;
+
+int main(int argc, char**argv, char**envp);
 
 char **myToc(char *str, char delim);
 
@@ -22,4 +24,9 @@ void readInput();
 
 int programOff(char *input);
 
+int getPath(char**envp);
+
+int getArgc();
+
+char *append(char *path, char *cmd);
 #endif
