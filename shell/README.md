@@ -1,17 +1,16 @@
-# Operating Systems Lab 1 - Tokenizer
+# Operating Systems Lab 2 - Shell Part 1
 # Stefany Carrillo
 
 This directory contains:
-* code that implements a tokenizer for a string input
-* a demo program that uses it
+* code that implements a shell for user input
 
 The demo program reads input from the user.
-The string is first checked to see the amount of words. Once the tokenizer knows the amount of words, it allocates memory for the amount of words and then checks the lengths of the words to later allocate the memory space for the letters in the words.
+The string is first tokenized and checked to see that it is not empty. If it's not empty it will go ahead and check if the command was given by itself or with a path. If given by itself it will get the envp path and append the command to all the directories in the path and try to execute them. Will return an error if execution fails.
 
 This demo contains the following files:
  * mytoc.h: header file of the methods shared between the 2 c files.
- * mytoc.c: implementation of the tokenizer; where all the functions are located.
- * test.c: a demonstration program that uses the tokenizer and frees the memory allocated.
+ * tokenizer.c: implementation of the tokenizer; where all the functions dealing with tokenizing are located.
+ * shell.c: a demonstration program that uses the shell with a couple helper functions.
 
 To compile:
 ~~~
@@ -20,7 +19,7 @@ $ make all
 
 To test it, try:
 ~~~
-$ ./mytoc
+$ ./run
 ~~~
 
 To delete binaries:
@@ -28,4 +27,4 @@ To delete binaries:
 $ make clean
 ~~~
 
-I received help/guidance from Ricardo Alvarez and Ana Garcia on how to implement the memory allocation for the letters after allocating the word space.
+Talked and troubleshooted with Ricardo Alvarez and Ana Garcia.
