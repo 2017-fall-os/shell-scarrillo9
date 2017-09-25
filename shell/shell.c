@@ -31,7 +31,7 @@ int main(int argc, char**argv, char **envp){
             //printf("%s\n", argv[0]);
             
             //checking cmd exists
-            if(stat(argv[0], &buffer) == 0 && buffer.st_mode & S_IXOTH){
+            //if(stat(argv[0], &buffer)){
                 int rc = fork();    //forking
                 
             
@@ -43,7 +43,8 @@ int main(int argc, char**argv, char **envp){
                 else if(rc == 0){   //proceeds to fork
                     if(argc > 1){   //if input is longer than 1 word, contains own path
                         char *path = argv[1];
-                        char **pathVector;
+                        int retVal = execve(path, argv[0], envp);
+                        fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal);
                     }
                     else{           //else will use path on envp
                         printf("I am child (pid:%d)\n\n", (int)getpid()); ff;
@@ -67,10 +68,10 @@ int main(int argc, char**argv, char **envp){
                     int wc = wait(NULL);
                     printf("\nI am parent of %d (wc:%d) (pid:%d)\n", rc, wc, (int)getpid()); ff;
                 }//end else
-            }//if command is found
-            else{       //didn't find command, prints error
-                write(0, "Command not found\n", 19);
-            }//else command not found
+            //}//if command is found
+            //else{       //didn't find command, prints error
+              //  write(0, "Command not found\n", 19);
+            //}//else command not found
         }//end if empty
     }//end while on
     return 0;
