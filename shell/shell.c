@@ -19,36 +19,44 @@ int main(int argc, char**argv, char **envp){
     int on = 1;
     while(on){
         write(1, "$ ", 2);
-        char *input[BUFSIZE] ={0};
+        char input[BUFSIZE] ={0};
 		read(0, input, sizeof input);
         
         if(programOff(input)){   //if user inputs exit
 			on = 0; break;       //program ends
 		}//end if exit
 		
+		
 		if(input[0] != '\n'){               //if input is not empty, it will go to tokenize and fork
+            
             argv = tokenizeInput(input);    //tokenizing input
-            //printf("%s\n", argv[0]);
+                //printf("%s\n", argv[0]);
             
-            //checking cmd exists
-            //if(stat(argv[0], &buffer)){
-                int rc = fork();    //forking
+                //checking cmd exists
+                //if(stat(argv[0], &buffer)){
+            
+            int rc = fork();    //forking   
+            
+            if(rc < 0){         //forking failed
+                write(0, "fork failed", 11);
+                exit(1);
+            }//end if fork failed
+            
+            else if(rc == 0){   //proceeds to fork
+                if(argc > 1){   //if input is longer than 1 word, contains own path
+                    char *path = argv[1];
+                    int retVal = execve(path, argv, envp);
+                    //fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal);
+                }//if it's 1 word
+                else{           //else will use path on envp
+                    if(input[0] == '/'){
+                        //char *path = argv[1];
+                        int retVal = execve(argv[0], argv, envp);
+                        fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal);
+                    }//end if path specified
+                    else{
+                    //printf("I am child (pid:%d)\n\n", (int)getpid()); ff;
                 
-            
-                if(rc < 0){         //forking failed
-                    write(0, "fork failed", 11);
-                    exit(1);
-                }//end if fork failed
-            
-                else if(rc == 0){   //proceeds to fork
-                    if(argc > 1){   //if input is longer than 1 word, contains own path
-                        char *path = argv[1];
-                        int retVal = execve(path, argv[0], envp);
-                        //fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal);
-                    }
-                    else{           //else will use path on envp
-                        //printf("I am child (pid:%d)\n\n", (int)getpid()); ff;
-                    
                         int pathNum = getPath(envp);                            //getting path address
                         char *path = startWord(envp[pathNum], '='); path++;     //path without PATH=
                         //printf("path: %s\n", path); ff;
@@ -56,22 +64,19 @@ int main(int argc, char**argv, char **envp){
                         char **temp = pathVector; 
                         for(; temp; temp++){                                    //appends cmd to path
                             char *tempExe = append(*temp, argv[0]);             //and moves to execute
-                            //printf("%s\n", tempExe); ff;
-                            int retVal = execve(tempExe, argv[0], envp);
+                            printf("%s\n", tempExe); ff;
+                            int retVal = execve(tempExe, argv, envp);
                             fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal); //if not executed
                         }//end for
-                    }//no path specified
+                    }
+                }//no path specified
                     
-                }//end else if fork
+            }//end else if fork
             
-                else{       //child is killed and then sent to parent
-                    int wc = wait(NULL);
-                    //printf("\nI am parent of %d (wc:%d) (pid:%d)\n", rc, wc, (int)getpid()); ff;
-                }//end else
-            //}//if command is found
-            //else{       //didn't find command, prints error
-              //  write(0, "Command not found\n", 19);
-            //}//else command not found
+            else{       //child is killed and then sent to parent
+                int wc = wait(NULL);
+                //printf("\nI am parent of %d (wc:%d) (pid:%d)\n", rc, wc, (int)getpid()); ff;
+            }//end else
         }//end if empty
     }//end while on
     return 0;
