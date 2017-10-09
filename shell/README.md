@@ -1,4 +1,4 @@
-# Operating Systems Lab 2 - Shell Part 1
+# Operating Systems Lab 2 - Shell
 # Stefany Carrillo
 
 This directory contains:
@@ -27,4 +27,4 @@ To delete binaries:
 $ make clean
 ~~~
 
-Talked and troubleshooted with Ricardo Alvarez and Ana Garcia.
+Talked and troubleshooted with Ricardo Alvarez and Ana Garcia on the execution of commands for part 1, and showed Ricardo how my change directory command worked.
