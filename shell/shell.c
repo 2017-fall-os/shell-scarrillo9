@@ -28,12 +28,7 @@ int main(int argc, char**argv, char **envp){
 		
 		
 		if(input[0] != '\n'){               //if input is not empty, it will go to tokenize and fork
-            
             argv = tokenizeInput(input);    //tokenizing input
-                //printf("%s\n", argv[0]);
-            
-                //checking cmd exists
-                //if(stat(argv[0], &buffer)){
             
             int rc = fork();    //forking   
             
@@ -48,12 +43,18 @@ int main(int argc, char**argv, char **envp){
                     int retVal = execve(path, argv, envp);
                     //fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal);
                 }//if it's 1 word
+                
                 else{           //else will use path on envp
-                    if(input[0] == '/'){
+                    if(changeDirectory(argv[0])){
+                        int retVal = chdir(argv[1]);
+                    }//end to chdir
+                    
+                    else if(input[0] == '/'){
                         //char *path = argv[1];
                         int retVal = execve(argv[0], argv, envp);
-                        fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal);
+                        //fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal);
                     }//end if path specified
+                    
                     else{
                     //printf("I am child (pid:%d)\n\n", (int)getpid()); ff;
                 
@@ -64,13 +65,12 @@ int main(int argc, char**argv, char **envp){
                         char **temp = pathVector; 
                         for(; temp; temp++){                                    //appends cmd to path
                             char *tempExe = append(*temp, argv[0]);             //and moves to execute
-                            printf("%s\n", tempExe); ff;
+                            //printf("%s\n", tempExe); ff;
                             int retVal = execve(tempExe, argv, envp);
-                            fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal); //if not executed
+                            //fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal); //if not executed
                         }//end for
-                    }
-                }//no path specified
-                    
+                    }//end else to use PATH
+                }//more than one word command
             }//end else if fork
             
             else{       //child is killed and then sent to parent
@@ -95,6 +95,14 @@ int programOff(char *input){
     char *exit = "exit";
     if(input[0]==exit[0] && input[1]==exit[1] 
         && input[2]==exit[2] && input[3]==exit[3]){
+			return 1;
+    }//end if exit
+    return 0;
+}//end program off
+
+int changeDirectory(char *input){
+    char *dirchange = "cd";
+    if(input[0]==dirchange[0] && input[1]==dirchange[1]){
 			return 1;
     }//end if exit
     return 0;
