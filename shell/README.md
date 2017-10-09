@@ -27,4 +27,4 @@ To delete binaries:
 $ make clean
 ~~~
 
-Talked and troubleshooted with Ricardo Alvarez and Ana Garcia on the execution of commands for part 1, and showed Ricardo how my change directory command worked.
+Talked and troubleshooted with Ricardo Alvarez and Ana Garcia on the execution of commands for part 1, and showed Ricardo how my change directory command worked. Used Freudenthal's demo code for piping. Used code from book on forking.
