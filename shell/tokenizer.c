@@ -1,5 +1,10 @@
 #include <stdio.h>  
 #include <stdlib.h> 
+#include <sys/types.h>		/* for lseek, read */
+#include <unistd.h>		    /* for lseek, read */
+#include <sys/stat.h>		/* for read */
+#include <fcntl.h>		    /* for read */
+#include <sys/wait.h>
 
 #include "mytoc.h" 
 #define ff fflush(stdout);
@@ -167,3 +172,88 @@ char *append(char *path, char *cmd){
     }//end for
     return curr;
 }//end append
+
+int isPipe(char *input){
+    int i;
+    for(i = 0; input[i] != 0; i++){
+        if(input[i] == '|')
+            return 1;
+    }//end for
+    return 0;
+}//end ifPipe
+
+int getPath(char **envp){
+    int i;
+    for(i = 0; envp[i] != (char*)0; i++){
+        if(envp[i][0] == 'P' && envp[i][1] == 'A' && envp[i][2] == 'T' && envp[i][3] == 'H')
+            break;
+    }//end for loop
+    return i;
+}//end getPath
+
+int programOff(char *input){
+    char *exit = "exit";
+    if(input[0]==exit[0] && input[1]==exit[1] 
+        && input[2]==exit[2] && input[3]==exit[3]){
+			return 1;
+    }//end if exit
+    return 0;
+}//end program off
+
+int changeDirectory(char *input){
+    char *dirchange = "cd";
+    if(input[0]==dirchange[0] && input[1]==dirchange[1]){
+			return 1;
+    }//end if exit
+    return 0;
+}//end program off
+
+void piping(char **command, char *path, char **envp){
+    int *pipeFds = (int *) calloc(2, sizeof(int));
+    pipe(pipeFds);
+    int pid = fork();
+    if(pid < 0){
+        write(1, "fork failed\n", 12);
+    }//end fork fail
+    else if(pid == 0){
+        close(1);
+        int currVal = dup(pipeFds[1]);
+        execveConditions(command[0], path, envp);
+        
+        close(pipeFds[0]);
+        close(pipeFds[1]);
+        
+        exit(2);
+    }//end if child
+    else{
+        int waiting = wait(NULL);
+        close(0);
+        int currVal = dup(pipeFds[0]);
+        execveConditions(command[1], path, envp);
+        
+        close(pipeFds[0]);
+        close(pipeFds[1]);
+    }//end if parents
+}//end piping
+
+void execveConditions(char *command, char *path, char **envp){
+    char **currCom = myToc(command, ' ');
+    if(numOfWords > 1){
+        char *path = currCom[1];
+        int retVal = execve(path, currCom, envp);
+    }//end if path is specified
+    
+    else{
+        if(command[0] == '/'){
+            int retVal = execve(currCom[0], currCom, envp);
+        } else{
+            char **pathVector = myToc(path, ':');
+            char **temp = pathVector;
+            for(; temp; temp++){
+                char *tempExe = append(*temp, currCom[0]);
+                int retVal = execve(tempExe, currCom, envp);
+            }//end for loop
+        }//end else
+    }//end else
+    
+}//end conditions

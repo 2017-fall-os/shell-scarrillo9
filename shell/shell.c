@@ -15,25 +15,39 @@ int argc;
 char **argv;
 struct stat buffer;
 
-int main(int argc, char**argv, char **envp){
+int main(int argc, char **argv, char **envp){
     int on = 1;
+    
     while(on){
         write(1, "$ ", 2);
         char input[BUFSIZE] ={0};
 		read(0, input, sizeof input);
         
         if(programOff(input)){   //if user inputs exit
-			on = 0; break;       //program ends
+			on = 0; break;      //program ends
+			exit(1);
 		}//end if exit
 		
 		
 		if(input[0] != '\n'){               //if input is not empty, it will go to tokenize and fork
+            if(isPipe(input)){
+                char **pipeCommand = myToc(input, '|');
+                int pathNum = getPath(envp);    //getting path address
+                char *path = startWord(envp[pathNum], '='); path++; 
+                piping(pipeCommand, path, envp);
+            }//end isPipe
+            else{
             argv = tokenizeInput(input);    //tokenizing input
+            
+            if(changeDirectory(argv[0])){
+                int retVal = chdir(argv[1]);
+            }//end to chdir
             
             int rc = fork();    //forking   
             
             if(rc < 0){         //forking failed
                 write(0, "fork failed", 11);
+                
                 exit(1);
             }//end if fork failed
             
@@ -42,15 +56,10 @@ int main(int argc, char**argv, char **envp){
                     char *path = argv[1];
                     int retVal = execve(path, argv, envp);
                     //fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal);
-                }//if it's 1 word
+                }//if path is specified
                 
                 else{           //else will use path on envp
-                    if(changeDirectory(argv[0])){
-                        int retVal = chdir(argv[1]);
-                    }//end to chdir
-                    
-                    else if(input[0] == '/'){
-                        //char *path = argv[1];
+                    if(input[0] == '/'){
                         int retVal = execve(argv[0], argv, envp);
                         //fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal);
                     }//end if path specified
@@ -77,36 +86,11 @@ int main(int argc, char**argv, char **envp){
                 int wc = wait(NULL);
                 //printf("\nI am parent of %d (wc:%d) (pid:%d)\n", rc, wc, (int)getpid()); ff;
             }//end else
+            }
         }//end if empty
     }//end while on
     return 0;
 }//end main
-
-int getPath(char **envp){
-    int i =0;
-    for(i = 0; envp[i] != (char*)0; i++){
-        if(envp[i][0] == 'P' && envp[i][1] == 'A' && envp[i][2] == 'T' && envp[i][3] == 'H')
-            break;
-    }//end for loop
-    return i;
-}//end getPath
-
-int programOff(char *input){
-    char *exit = "exit";
-    if(input[0]==exit[0] && input[1]==exit[1] 
-        && input[2]==exit[2] && input[3]==exit[3]){
-			return 1;
-    }//end if exit
-    return 0;
-}//end program off
-
-int changeDirectory(char *input){
-    char *dirchange = "cd";
-    if(input[0]==dirchange[0] && input[1]==dirchange[1]){
-			return 1;
-    }//end if exit
-    return 0;
-}//end program off
 
 char **tokenizeInput(char *input){
     for(int i = 0; input[i] != 0; i++){

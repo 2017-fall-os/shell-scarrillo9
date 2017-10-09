@@ -32,4 +32,12 @@ void freeVector(char **vector);
 
 char *append(char *path, char *cmd);
 
+int changeDirectory(char *input);
+
+int isPipe(char *input);
+
+void piping(char **command, char *path, char **envp);
+
+void execveConditions(char *command, char *path, char **envp);
+
 #endif
