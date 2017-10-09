@@ -6,6 +6,8 @@ int main(int argc, char**argv, char**envp);
 
 int programOff(char *input);
 
+int changeDirectory(char *input);
+
 int getPath(char**envp);
 
 char **tokenizeInput();
