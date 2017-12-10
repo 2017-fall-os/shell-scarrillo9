@@ -8,7 +8,9 @@ int programOff(char *input);
 
 int changeDirectory(char *input);
 
-int getPath(char**envp);
+char *getPath(char**envp);
+
+int getPathLocation(char **envp);
 
 char **tokenizeInput();
 
@@ -17,8 +19,6 @@ char **tokenizeInput();
 char **myToc(char *str, char delim);
 
 char *copyWord(char *str, int length, char delim);
-
-int getArgc();
 
 int countLetters(char *str, char delim);
 
@@ -34,10 +34,14 @@ char *append(char *path, char *cmd);
 
 int changeDirectory(char *input);
 
-int isPipe(char *input);
+int isDelim(char *input, char delim);
 
-void piping(char **command, char *path, char **envp);
+int piping(char *input, char **envp);
 
 void execveConditions(char *command, char *path, char **envp);
+
+int getStringSize(char *input);
+
+char *fixInput(char *input);
 
 #endif
