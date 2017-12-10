@@ -13,96 +13,120 @@
 
 int argc;
 char **argv;
-struct stat buffer;
 
 int main(int argc, char **argv, char **envp){
     int on = 1;
+   // char *PS1 = getenv("PS1");
     
     while(on){
-        write(1, "$ ", 2);
-        char input[BUFSIZE] ={0};
-		read(0, input, sizeof input);
+        
+        if(getenv("PS1")){
+            char *PS1 = getenv("PS1");
+            int PS1length = getStringSize(PS1);
+            write(1, getenv("PS1"), PS1length);
+        }//end if ps1
+        else{
+            write(1, "$ ", 2);
+        }
+        
+        char input[BUFSIZE];
+		int lengthRead = read(0, input, sizeof input);
+        if(lengthRead == 1){
+            on = 1;
+            continue;
+        }
+        
+        input[lengthRead-1] = '\0';
         
         if(programOff(input)){   //if user inputs exit
 			on = 0; break;      //program ends
 			exit(1);
 		}//end if exit
 		
-		
-		if(input[0] != '\n'){               //if input is not empty, it will go to tokenize and fork
-            if(isPipe(input)){
-                char **pipeCommand = myToc(input, '|');
-                int pathNum = getPath(envp);    //getting path address
-                char *path = startWord(envp[pathNum], '='); path++; 
-                piping(pipeCommand, path, envp);
-            }//end isPipe
-            else{
-            argv = tokenizeInput(input);    //tokenizing input
+		argv = myToc(input, ' ');         //tokenizing input
+        argc = countWords(input, ' ');
+        char *path = getPath(envp);
+        
+		if(input[0] != '\n'){               
+            //if input is not empty, it will go to tokenize and fork
+            if(argv == NULL){
+                continue;
+            }
             
-            if(changeDirectory(argv[0])){
+            if(isDelim(input, '&')){ //check if background task
+                int rc = fork();    //forking
+                if(rc == 0){
+                    input[lengthRead-2] = '\0';
+                    execveConditions(input, path, envp);
+                }//end background
+                else{
+                    wait(NULL);
+                }
+            }//end isBackground
+            
+            if(isDelim(input, '|')){ //checks if pipe
+                int rc = fork();    //forking   
+            
+                if(rc == 0){
+                    int retVal = piping(input, envp);
+                }//end if pipeCommand
+                else{
+                    wait(NULL);
+                }//end else
+            }//end isPipe
+            
+            if(changeDirectory(argv[0])){ //checks if cd
+                //printf("here at chdir\n"); ff;
                 int retVal = chdir(argv[1]);
+                
+                if(retVal < 0){
+                    perror("error"); 
+                }
+                
+                wait(NULL);
             }//end to chdir
             
-            int rc = fork();    //forking   
             
-            if(rc < 0){         //forking failed
-                write(0, "fork failed", 11);
+            else{
+                //printf("here at beginning\n"); ff;
                 
-                exit(1);
-            }//end if fork failed
+                int rc = fork();    //forking   
             
-            else if(rc == 0){   //proceeds to fork
-                if(argc > 1){   //if input is longer than 1 word, contains own path
-                    char *path = argv[1];
-                    int retVal = execve(path, argv, envp);
-                    //fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal);
-                }//if path is specified
+                if(rc < 0){         //forking failed
+                    write(0, "fork failed", 11);
+                    exit(1);
+                }//end if fork failed
                 
-                else{           //else will use path on envp
-                    if(input[0] == '/'){
-                        int retVal = execve(argv[0], argv, envp);
-                        //fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal);
-                    }//end if path specified
-                    
-                    else{
-                    //printf("I am child (pid:%d)\n\n", (int)getpid()); ff;
                 
-                        int pathNum = getPath(envp);                            //getting path address
-                        char *path = startWord(envp[pathNum], '='); path++;     //path without PATH=
-                        //printf("path: %s\n", path); ff;
-                        char **pathVector = myToc(path, ':');                   //tokenizing path by :
-                        char **temp = pathVector; 
-                        for(; temp; temp++){                                    //appends cmd to path
-                            char *tempExe = append(*temp, argv[0]);             //and moves to execute
-                            //printf("%s\n", tempExe); ff;
-                            int retVal = execve(tempExe, argv, envp);
-                            //fprintf(stderr, "%s: exec returned %d\n", argv[0], retVal); //if not executed
-                        }//end for
-                    }//end else to use PATH
-                }//more than one word command
-            }//end else if fork
-            
-            else{       //child is killed and then sent to parent
-                int wc = wait(NULL);
-                //printf("\nI am parent of %d (wc:%d) (pid:%d)\n", rc, wc, (int)getpid()); ff;
-            }//end else
-            }
+                else if(rc == 0){   //proceeds to fork
+                    if(argc > 1){   
+                        //if input is longer than 1 word, contains own path
+                        char *path = argv[1];
+                        int retVal = execve(path, argv, envp);
+                    }//if path is specified
+                
+                    else{           
+                        //else will use path on envp
+                        if(input[0] != '/'){
+                            char **pathVector = myToc(path, ':');       //tokenizing path by :
+                            char **temp = pathVector;   
+                            for(; temp; temp++){                        //appends cmd to path
+                                char *tempExe = append(*temp, argv[0]); //and moves to execute
+                                int retVal = execve(tempExe, argv, envp);
+                            }//end for
+                            //freeVector(pathVector);
+                        }//end if path specified
+                        else{
+                            int retVal = execve(argv[0], argv, envp);
+                        }//end else to use PATH
+                    }//more than one word command
+                }//end else if fork
+                else{
+                    wait(NULL);
+                }
+            }//end else runs commands
         }//end if empty
     }//end while on
     return 0;
 }//end main
-
-char **tokenizeInput(char *input){
-    for(int i = 0; input[i] != 0; i++){
-        if(input[i] == '\n')
-            input[i] = '\0';
-    }//end for
-    
-    char **tokens = myToc(input, ' ');
-    argc = getArgc();
-        
-    //freeVector(tokens);
-    //write(1, "after free", 10);
-    return tokens;
-}//end readInput
 
