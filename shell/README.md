@@ -27,4 +27,6 @@ To delete binaries:
 $ make clean
 ~~~
 
-Talked and troubleshooted with Ricardo Alvarez and Ana Garcia on the execution of commands for part 1, and showed Ricardo how my change directory command worked. Used Freudenthal's demo code for piping. Used code from book on forking.
+Talked and troubleshooted with Ricardo Alvarez and Ana Garcia on the execution of commands for part 1, and showed Ricardo how my change directory command worked. Used Freudenthal's demo code for piping. Used code from book on forking. Received help from Ricardo on the PS1 script testing. 
+
+09/12/17 - Problem with the '$ ' prompt. Background tasks, pipes, change directory, and regular commands work. When testing the script, all tests failed. The initial prompt is probably the problem.
