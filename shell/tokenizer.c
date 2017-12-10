@@ -12,34 +12,22 @@
 int numOfWords = 0;
 
 char **myToc(char *str, char delim){
-	//printf("inside myToc\n"); ff;
 	numOfWords = countWords(str, delim);
-	
 	//creating pointer array
 	char **vector = (char **)calloc(numOfWords+1, sizeof(char *));
-	vector[numOfWords] = NULL;	//creating null value at end of array
+	vector[numOfWords] = '\0';	//creating null value at end of array
 	char *currString = str;
-	
 	int i;
+    
 	for(i = 0; i < numOfWords; i++){
 		int wordLength = countLetters(currString, delim);	//gets length of first word
-		
-		vector[i] = (char *)malloc(sizeof(char)*wordLength+1);	//allocates the memory needed
-		vector[wordLength] = NULL;	//creates null value to end array
 		vector[i] = copyWord(currString, wordLength, delim);	//copy the word in the nextor space allocated
-		
-		char *currWord = startWord(currString, delim);	//gets the new string without the word just allocated
-		
-		//printf("currString: %s\n currWord: %s\n", currString, currWord); ff;
+        char *currWord = startWord(currString, delim);      //gets the new string without the word just allocated
 		currString = currWord;
 	}//end for loop
 	//printVector(vector);
 	return vector;
 }//end myToc
-
-int getArgc(){
-    return numOfWords;
-}//end getArgc
 
 //frees vector
 void freeVector(char **vector){
@@ -135,7 +123,7 @@ int countWords(char *str, char delim){
 	int i = 0; 
 	int numOfWords = 0;
 	int space = 1;	//multiple delims
-	
+
 	while(str[i] != '\0'){
 		if(str[i] != delim && space == 1){
 			numOfWords++;
@@ -173,20 +161,22 @@ char *append(char *path, char *cmd){
     return curr;
 }//end append
 
-int isPipe(char *input){
+int isDelim(char *input, char delim){
     int i;
     for(i = 0; input[i] != 0; i++){
-        if(input[i] == '|')
+        if(input[i] == delim)
             return 1;
     }//end for
     return 0;
 }//end ifPipe
 
-int getPath(char **envp){
+int getPathLocation(char **envp){
     int i;
     for(i = 0; envp[i] != (char*)0; i++){
-        if(envp[i][0] == 'P' && envp[i][1] == 'A' && envp[i][2] == 'T' && envp[i][3] == 'H')
+        if(envp[i][0] == 'P' && envp[i][1] == 'A' 
+            && envp[i][2] == 'T' && envp[i][3] == 'H'){
             break;
+        }
     }//end for loop
     return i;
 }//end getPath
@@ -195,7 +185,7 @@ int programOff(char *input){
     char *exit = "exit";
     if(input[0]==exit[0] && input[1]==exit[1] 
         && input[2]==exit[2] && input[3]==exit[3]){
-			return 1;
+        return 1;
     }//end if exit
     return 0;
 }//end program off
@@ -203,48 +193,66 @@ int programOff(char *input){
 int changeDirectory(char *input){
     char *dirchange = "cd";
     if(input[0]==dirchange[0] && input[1]==dirchange[1]){
-			return 1;
+        return 1;
     }//end if exit
     return 0;
 }//end program off
 
-void piping(char **command, char *path, char **envp){
-    int *pipeFds = (int *) calloc(2, sizeof(int));
-    pipe(pipeFds);
-    int pid = fork();
-    if(pid < 0){
-        write(1, "fork failed\n", 12);
-    }//end fork fail
-    else if(pid == 0){
+char *getPath(char **envp){
+    int pathNum = getPathLocation(envp);
+    char *path = startWord(envp[pathNum], '='); 
+    path++;
+    return path;
+}//end getpath
+
+char *fixInput(char *input){
+    for(int i = 0; input[i] != 0; i++){
+        if(input[i] == '\n')
+            input[i] = '\0';
+    }//end for
+    
+    return input;
+}//end fixInput
+
+int piping(char *input, char **envp){
+    char **pipes = myToc(input, '|');
+    char *path = getPath(envp); 
+    int *thisPipe;
+    thisPipe = (int *)calloc(2, sizeof(int));
+    
+    //printf("pipe 1: %s\npipe 2: %s\n", pipes[0], pipes[1]); ff;
+    pipe(thisPipe);
+
+    int rc = fork();
+    
+    if(rc == 0){
+        wait(NULL);
         close(1);
-        int currVal = dup(pipeFds[1]);
-        execveConditions(command[0], path, envp);
-        
-        close(pipeFds[0]);
-        close(pipeFds[1]);
-        
+        dup(thisPipe[1]);
+        close(thisPipe[0]); 
+        close(thisPipe[1]);
+        execveConditions(pipes[0], path, envp);
         exit(2);
-    }//end if child
+    }//end if pipe
     else{
-        int waiting = wait(NULL);
         close(0);
-        int currVal = dup(pipeFds[0]);
-        execveConditions(command[1], path, envp);
-        
-        close(pipeFds[0]);
-        close(pipeFds[1]);
-    }//end if parents
+        dup(thisPipe[0]);
+        close(thisPipe[1]);
+        close(thisPipe[0]);
+        execveConditions(pipes[1], path, envp);
+    }//end else
+    return 0;
 }//end piping
 
 void execveConditions(char *command, char *path, char **envp){
     char **currCom = myToc(command, ' ');
-    if(numOfWords > 1){
-        char *path = currCom[1];
-        int retVal = execve(path, currCom, envp);
-    }//end if path is specified
+    //if(numOfWords > 1){
+      //  char *path = currCom[1];
+        //int retVal = execve(path, currCom, envp);
+  //  }//end if path is specified
     
-    else{
-        if(command[0] == '/'){
+    //else{
+        if(command[0] == '/' || command[1] == '/'){
             int retVal = execve(currCom[0], currCom, envp);
         } else{
             char **pathVector = myToc(path, ':');
@@ -254,6 +262,16 @@ void execveConditions(char *command, char *path, char **envp){
                 int retVal = execve(tempExe, currCom, envp);
             }//end for loop
         }//end else
-    }//end else
-    
+    //}//end else
+    freeVector(currCom);
 }//end conditions
+
+
+int getStringSize(char *input){
+    int count = 0;
+    for(; input; input++){
+        count++;
+    }//end for
+    printf("%d\n", count);
+    return count;
+}//end getStringSize
